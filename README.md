@@ -4,7 +4,7 @@
 
 Start by cloning the repository:
 ```bash
-    git clone https://github.com/talhariaz324/job-listing-frontend.git
+git clone https://github.com/talhariaz324/job-listing-frontend.git
 ```
 
 Next, change the `.env.sample` file to `.env`:
