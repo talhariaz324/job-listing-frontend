@@ -1,68 +1,72 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import JobCard from '@/src/components/JobCard'
-import JobModal from '@/src/components/JobModal'
-import { createJob, getJobs, getJob } from '@/src/lib/api'
-import { PlusCircle, RefreshCw } from 'lucide-react'
-import { Job } from '@/src/@types'
-
-
+import { useState, useEffect } from "react";
+import JobCard from "@/src/components/JobCard";
+import JobModal from "@/src/components/JobModal";
+import { createJob, getJobs, getJob } from "@/src/lib/api";
+import { PlusCircle, RefreshCw } from "lucide-react";
+import { Job } from "@/src/@types";
+import { toast } from "react-toastify";
 
 export default function Home() {
-  const [jobs, setJobs] = useState<Job[]>([])
-  const [loading, setLoading] = useState(false)
-  const [selectedJob, setSelectedJob] = useState<Job | null>(null)
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
-  const fetchJobs = async () => {
+  const fetchJobs = async (showLoading = false) => {
+    if (showLoading) {
+      toast.success("Job status refreshed successfully.");
+    }
     try {
-      const fetchedJobs = await getJobs()
+      const fetchedJobs = await getJobs();
       if (JSON.stringify(jobs) !== JSON.stringify(fetchedJobs)) {
-        setJobs(fetchedJobs)
+        setJobs(fetchedJobs);
       }
     } catch (error) {
-      console.error("Error fetching jobs:", error)
+      toast.error("Unable to load jobs. Check your internet connection.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleCreateJob = async () => {
     try {
-      await createJob()
-      fetchJobs()
+      await createJob();
+      fetchJobs();
     } catch (error) {
-      console.error("Error creating job:", error)
+      toast.error("Failed to create new job. Please try again.");
     }
-  }
+  };
 
   const handleRefreshJob = async (jobId: string) => {
     try {
-      const updatedJob = await getJob(jobId)
-      const currentJob = jobs.find(job => job.id === jobId)
+      const updatedJob = await getJob(jobId);
+      const currentJob = jobs.find((job) => job.id === jobId);
       if (JSON.stringify(currentJob) !== JSON.stringify(updatedJob)) {
-        setJobs(jobs.map(job => job.id === jobId ? updatedJob : job))
+        setJobs(jobs.map((job) => (job.id === jobId ? updatedJob : job)));
         if (selectedJob?.id === jobId) {
-          setSelectedJob(updatedJob)
+          setSelectedJob(updatedJob);
         }
       }
     } catch (error) {
-      console.error("Error refreshing job:", error)
+      toast.error("Failed to refresh job status. Please try again.");
     }
-  }
+  };
 
   useEffect(() => {
-    setLoading(true)
-    fetchJobs()
+    setLoading(true);
+    fetchJobs(false);
     const interval = setInterval(() => {
-      fetchJobs()
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [])
+      fetchJobs(false);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-8 text-gray-800 text-center">Job Management System</h1>
+      <h1 className="text-4xl font-bold mb-8 text-gray-800 text-center">
+        Job Management System
+      </h1>
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin" />
@@ -70,14 +74,14 @@ export default function Home() {
       ) : (
         <>
           <div className="flex justify-center items-center mb-8 space-x-4">
-            <button 
-              onClick={handleCreateJob} 
+            <button
+              onClick={handleCreateJob}
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 flex items-center"
             >
               <PlusCircle className="w-5 h-5 mr-2" /> Create New Job
             </button>
-            <button 
-              onClick={fetchJobs} 
+            <button
+              onClick={() => fetchJobs(true)}
               className="border border-indigo-600 text-indigo-600 hover:bg-indigo-50 font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-300 ease-in-out flex items-center"
             >
               <RefreshCw className="w-5 h-5 mr-2" /> Refresh All Jobs
@@ -90,7 +94,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {jobs.map(job => (
+              {jobs.map((job) => (
                 <JobCard
                   key={job.id}
                   job={job}
@@ -110,5 +114,5 @@ export default function Home() {
         />
       )}
     </div>
-  )
+  );
 }
