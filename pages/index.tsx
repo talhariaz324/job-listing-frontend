@@ -13,10 +13,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
-  const fetchJobs = async (showLoading = false) => {
-    if (showLoading) {
-      toast.success("Job status refreshed successfully.");
-    }
+  const fetchJobs = async () => {
     try {
       const fetchedJobs = await getJobs();
       if (JSON.stringify(jobs) !== JSON.stringify(fetchedJobs)) {
@@ -55,11 +52,33 @@ export default function Home() {
 
   useEffect(() => {
     setLoading(true);
-    fetchJobs(false);
-    const interval = setInterval(() => {
-      fetchJobs(false);
-    }, 10000);
-    return () => clearInterval(interval);
+    fetchJobs();
+    const ws = new WebSocket('ws://localhost:5000');
+
+    ws.onopen = () => {
+      console.log('Connected to WebSocket server');
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log('Received WebSocket message:', data);
+      if (data.job) {
+        setJobs((prevJobs) => {
+          const updatedJobs = prevJobs.map((job) =>
+            job.id === data.job.id ? data.job : job
+          );
+          return updatedJobs;
+        });
+      }
+    };
+
+    ws.onclose = () => {
+      console.log('Disconnected from WebSocket server');
+    };
+
+    return () => {
+      ws.close();
+    };
   }, []);
 
   return (
@@ -79,12 +98,6 @@ export default function Home() {
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1 flex items-center"
             >
               <PlusCircle className="w-5 h-5 mr-2" /> Create New Job
-            </button>
-            <button
-              onClick={() => fetchJobs(true)}
-              className="border border-indigo-600 text-indigo-600 hover:bg-indigo-50 font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-300 ease-in-out flex items-center"
-            >
-              <RefreshCw className="w-5 h-5 mr-2" /> Refresh All Jobs
             </button>
           </div>
           {jobs.length === 0 ? (

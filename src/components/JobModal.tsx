@@ -1,4 +1,3 @@
-// import { Button } from "@/src/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -71,9 +70,7 @@ export default function JobModal({ job, onClose, onRefresh }: JobModalProps) {
                     img.parentElement?.querySelector('.absolute')?.remove();
                   }}
                   onError={(e) => {
-                    // Cast the event target to HTMLImageElement
                     const img = e.target as HTMLImageElement;
-                    // Add a timestamp to bust cache
                     const newSrc = `${job.result}?t=${Date.now()}`;
                     img.src = newSrc;
                   }}
